@@ -1,0 +1,32 @@
+services:
+  traefik:
+    container_name: traefik-container
+    image: traefik:latest
+    restart: unless-stopped
+    command:
+      - "--configFile=/traefik.yml"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080" # this hais for the dashboard 
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./data/traefik.yml:/traefik.yml:ro"
+      - "./data/acme.json:/data/acme.json:rw" 
+    labels: 
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.kangtido.life`)"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.traefik.service=api@internal"
+    environment:
+      - CLOUDFLARE_EMAIL=${EMAIL}
+      - CF_DNS_API_TOKEN=${API_TOKEN}
+    networks: 
+      - proxy
+volumes: 
+  traefik_acme_data: 
+      external: false 
+networks: 
+  proxy:
+    external: true
